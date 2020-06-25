@@ -293,6 +293,9 @@ if(MSVC)
 endif()
 
 if(ENABLE_OPENMP)
+  include_directories( /usr/local/Cellar/libomp/9.0.1/include)
+  link_directories("/usr/local/lib")
+
   find_package(OpenMP)
   if(OpenMP_FOUND)
     set_config_option(HAVE_OPENMP "OpenMP")
@@ -1679,10 +1682,10 @@ if(HAVE_FLTK)
     add_executable(gmsh WIN32 Common/Main.cpp ${GMSH_SRC})
   endif()
   # we could add this to create a minimal app bundle even without install
-  # if(APPLE AND NOT ENABLE_OS_SPECIFIC_INSTALL)
-  #  set_target_properties(gmsh PROPERTIES MACOSX_BUNDLE ON
-  #    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/utils/misc/gmsh_dev.plist)
-  # endif()
+  if(APPLE AND NOT ENABLE_OS_SPECIFIC_INSTALL)
+    set_target_properties(gmsh PROPERTIES MACOSX_BUNDLE ON
+      MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/utils/misc/gmsh_dev.plist)
+  endif()
 else()
   if(ENABLE_BUILD_DYNAMIC)
     add_executable(gmsh Common/Main.cpp)

@@ -314,11 +314,74 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
     Msg::Error("Unable to open file '%s'", name.c_str());
     return 0;
   }
-
+  const bool writePhysicalVolumes_Surfaces = true;
+  if(writePhysicalVolumes_Surfaces)
+  {
+      const std::string path = SplitFileName(name)[0];
+      const std::string baseName = SplitFileName(name)[1];
+      const std::string extName = SplitFileName(name)[2];  // with dot, e.g. .stl
+      // 1. 获取所有的Physical Groups
+      std::map<int, std::vector<GEntity *> > physicals[4]; //0，1，2，3分别表示点，线，面，体
+      getPhysicalGroups(physicals);
+      std::map<int, std::vector<GEntity *> >::const_iterator it;
+      // 2. 处理Physical Volume
+      const int dimVolume = 3;
+      for(it=physicals[dimVolume].begin();it!=physicals[dimVolume].end();++it)
+      {
+        std::string nameRegion = getPhysicalName(dimVolume, it->first);       //获取某个physical Volume 的name
+        std::vector<int> tags=getTagsForPhysicalName(dimVolume,nameRegion);   //获取给定physical name的所有entries的tag值
+        std::vector<GFace *> faces;
+        for (size_t i = 0; i < tags.size(); i++)
+        {
+          GRegion* region=getRegionByTag(tags[i]);
+          std::vector<GFace *> faces_region=region->faces();
+          for (size_t iface = 0; iface < faces_region.size(); iface++)
+          {
+            faces.push_back(faces_region[iface]);
+          }
+          Msg::Info("Physical Volume: %s , the %dth, faces %d",nameRegion.c_str(),i,faces_region.size());
+        }
+        // 将每个physical volume都写入一个stl文件
+          std::string fnameRegion=path+baseName+"_"+nameRegion+extName;
+          FILE *fp_region = Fopen(fnameRegion.c_str(), binary ? "wb" : "w");
+          if(!fp) {
+            Msg::Error("Unable to open file '%s'", fnameRegion.c_str());
+            return 0;
+          }
+          
+          writeSTLfaces(fp_region, faces, binary, scalingFactor, nameRegion);
+          Msg::Info("Volume(%s) has %d faces, done writing %s",nameRegion.c_str(),faces.size(),fnameRegion.c_str());
+          fclose(fp_region);
+      }
+      // 3. 处理Physical Surfaces
+      const int dimSurface = 2;
+      for(it=physicals[dimSurface].begin();it!=physicals[dimSurface].end();++it)
+      {
+        std::string nameSurface = getPhysicalName(dimSurface, it->first);
+        std::vector<int> tags=getTagsForPhysicalName(dimSurface,nameSurface); //某个physical name对应的surface可能不止一个
+        std::vector<GFace *> faces;
+        for (size_t i = 0; i < tags.size(); i++)
+        {
+          faces.push_back(getFaceByTag(tags[i]));
+        }
+        // Msg::Info("Physical Surface: %s , faces %d",nameSurface.c_str(),i,faces.size());
+          std::string fnameSurface=path+baseName+"_"+nameSurface+extName;
+          FILE *fp_surface = Fopen(fnameSurface.c_str(), binary ? "wb" : "w");
+          if(!fp) {
+            Msg::Error("Unable to open file '%s'", fnameSurface.c_str());
+            return 0;
+          }
+          writeSTLfaces(fp_surface, faces, binary, scalingFactor, nameSurface);
+          Msg::Info("Surface(%s) has %d face(s), done writing %s",nameSurface.c_str(),faces.size(),fnameSurface.c_str());
+          fclose(fp_surface);
+      }
+  }
+  
   if(noPhysicalGroups()) saveAll = true;
-
   if(oneSolidPerSurface == 1){ // one solid per surface
+    
     for(fiter it = firstFace(); it != lastFace(); ++it) {
+      
       if(saveAll || (*it)->physicals.size()) {
         std::vector<GFace*> faces(1, *it);
         std::string name = getElementaryName(2, (*it)->tag());

@@ -16,3 +16,5 @@ doc/doxygen/html
 ## CLion directories
 .idea
 cmake-build-*
+
+doc/html

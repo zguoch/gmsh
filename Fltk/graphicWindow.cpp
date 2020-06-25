@@ -277,7 +277,7 @@ static int _save_mesh_stat(const char *name){ return meshStatFileDialog(name); }
 static int _save_options(const char *name){ return optionsFileDialog(name); }
 static int _save_geo(const char *name){ return geoFileDialog(name); }
 static int _save_brep(const char *name){ CreateOutputFile(name, FORMAT_BREP); return 1; }
-static int _save_step(const char *name){ CreateOutputFile(name, FORMAT_STEP); return 1; }
+static int _save_step(const char *name){ CreateOutputFile(GModel::current()->getFileName()+".step", FORMAT_STEP); return 1; }
 static int _save_cgns(const char *name){ return cgnsFileDialog(name); }
 static int _save_unv(const char *name){ return unvinpFileDialog
     (name, "UNV Options", FORMAT_UNV); }
@@ -410,62 +410,62 @@ static void file_export_cb(Fl_Widget *w, void *data)
     {"Guess From Extension\t*.*", _save_auto},
     {"Geometry - Gmsh Options\t*.opt", _save_options},
     {"Geometry - Gmsh Unrolled GEO\t*.geo_unrolled", _save_geo},
-#if defined(HAVE_OCC)
-    {"Geometry - OpenCASCADE STEP\t*.step", _save_step},
-    {"Geometry - OpenCASCADE BRep\t*.brep", _save_brep},
-#endif
-    {"Mesh - Gmsh MSH\t*.msh", _save_msh},
-    {"Mesh - Abaqus INP\t*.inp", _save_inp},
-    {"Mesh - LSDYNA KEY\t*.key", _save_key},
-    {"Mesh - CELUM\t*.celum", _save_celum},
-#if defined(HAVE_LIBCGNS)
-    {"Mesh - CGNS (Experimental)\t*.cgns", _save_cgns},
-#endif
-    {"Mesh - Diffpack 3D\t*.diff", _save_diff},
-    {"Mesh - I-deas Universal\t*.unv", _save_unv},
-    {"Mesh - Iridum\t*.ir3", _save_ir3},
-#if defined(HAVE_MED)
-    {"Mesh - MED\t*.med", _save_med},
-#endif
-    {"Mesh - INRIA Medit\t*.mesh", _save_mesh},
-    {"Mesh - CEA Triangulation\t*.mail", _save_mail},
-    {"Mesh - Matlab\t*.m", _save_matlab},
-    {"Mesh - Nastran Bulk Data File\t*.bdf", _save_bdf},
-    {"Mesh - Plot3D Structured Mesh\t*.p3d", _save_p3d},
-    {"Mesh - STL Surface\t*.stl", _save_stl},
-    {"Mesh - VRML Surface\t*.wrl", _save_vrml},
-    {"Mesh - VTK\t*.vtk", _save_vtk},
-    {"Mesh - Tochnog\t*.dat", _save_tochnog},
-    {"Mesh - PLY2 Surface\t*.ply2", _save_ply2},
-    {"Mesh - SU2\t*.su2", _save_su2},
-    {"Mesh - GAMBIT Neutral File\t*.neu", _save_neu},
-    {"Post-processing - Gmsh POS\t*.pos", _save_view_pos},
-    {"Post-processing - X3D (X3D)\t*.x3d", _save_view_x3d},
-#if defined(HAVE_MED)
-    {"Post-processing - MED\t*.rmed", _save_view_med},
-#endif
-    {"Post-processing - Generic TXT\t*.txt", _save_view_txt},
-    {"Post-processing - Mesh Statistics\t*.pos", _save_mesh_stat},
-    {"Post-processing - Adapted data\t*.pvtu", _save_view_adapt_pvtu},
-    {"Image - Encapsulated PostScript\t*.eps", _save_eps},
-    {"Image - GIF\t*.gif", _save_gif},
-#if defined(HAVE_LIBJPEG)
-    {"Image - JPEG\t*.jpg", _save_jpeg},
-#endif
-    {"Image - LaTeX\t*.tex", _save_tex},
-    {"Image - PDF\t*.pdf", _save_pdf},
-#if defined(HAVE_LIBPNG)
-    {"Image - PNG\t*.png", _save_png},
-    {"Image - PGF\t*.pgf", _save_pgf},
-#endif
-    {"Image - PostScript\t*.ps", _save_ps},
-    {"Image - PPM\t*.ppm", _save_ppm},
-    {"Image - SVG\t*.svg", _save_svg},
-    {"Image - TIKZ\t*.tikz", _save_tikz},
-    {"Image - YUV\t*.yuv", _save_yuv},
-#if defined(HAVE_MPEG_ENCODE)
-    {"Movie - MPEG\t*.mpg", _save_mpeg},
-#endif
+    #if defined(HAVE_OCC)
+      {"Geometry - OpenCASCADE STEP\t*.step", _save_step},
+      {"Geometry - OpenCASCADE BRep\t*.brep", _save_brep},
+    #endif
+      {"Mesh - Gmsh MSH\t*.msh", _save_msh},
+      {"Mesh - Abaqus INP\t*.inp", _save_inp},
+      {"Mesh - LSDYNA KEY\t*.key", _save_key},
+      {"Mesh - CELUM\t*.celum", _save_celum},
+    #if defined(HAVE_LIBCGNS)
+      {"Mesh - CGNS (Experimental)\t*.cgns", _save_cgns},
+    #endif
+      {"Mesh - Diffpack 3D\t*.diff", _save_diff},
+      {"Mesh - I-deas Universal\t*.unv", _save_unv},
+      {"Mesh - Iridum\t*.ir3", _save_ir3},
+    #if defined(HAVE_MED)
+      {"Mesh - MED\t*.med", _save_med},
+    #endif
+      {"Mesh - INRIA Medit\t*.mesh", _save_mesh},
+      {"Mesh - CEA Triangulation\t*.mail", _save_mail},
+      {"Mesh - Matlab\t*.m", _save_matlab},
+      {"Mesh - Nastran Bulk Data File\t*.bdf", _save_bdf},
+      {"Mesh - Plot3D Structured Mesh\t*.p3d", _save_p3d},
+      {"Mesh - STL Surface\t*.stl", _save_stl},
+      {"Mesh - VRML Surface\t*.wrl", _save_vrml},
+      {"Mesh - VTK\t*.vtk", _save_vtk},
+      {"Mesh - Tochnog\t*.dat", _save_tochnog},
+      {"Mesh - PLY2 Surface\t*.ply2", _save_ply2},
+      {"Mesh - SU2\t*.su2", _save_su2},
+      {"Mesh - GAMBIT Neutral File\t*.neu", _save_neu},
+      {"Post-processing - Gmsh POS\t*.pos", _save_view_pos},
+      {"Post-processing - X3D (X3D)\t*.x3d", _save_view_x3d},
+    #if defined(HAVE_MED)
+      {"Post-processing - MED\t*.rmed", _save_view_med},
+    #endif
+      {"Post-processing - Generic TXT\t*.txt", _save_view_txt},
+      {"Post-processing - Mesh Statistics\t*.pos", _save_mesh_stat},
+      {"Post-processing - Adapted data\t*.pvtu", _save_view_adapt_pvtu},
+      {"Image - Encapsulated PostScript\t*.eps", _save_eps},
+      {"Image - GIF\t*.gif", _save_gif},
+    #if defined(HAVE_LIBJPEG)
+      {"Image - JPEG\t*.jpg", _save_jpeg},
+    #endif
+      {"Image - LaTeX\t*.tex", _save_tex},
+      {"Image - PDF\t*.pdf", _save_pdf},
+    #if defined(HAVE_LIBPNG)
+      {"Image - PNG\t*.png", _save_png},
+      {"Image - PGF\t*.pgf", _save_pgf},
+    #endif
+      {"Image - PostScript\t*.ps", _save_ps},
+      {"Image - PPM\t*.ppm", _save_ppm},
+      {"Image - SVG\t*.svg", _save_svg},
+      {"Image - TIKZ\t*.tikz", _save_tikz},
+      {"Image - YUV\t*.yuv", _save_yuv},
+    #if defined(HAVE_MPEG_ENCODE)
+      {"Movie - MPEG\t*.mpg", _save_mpeg},
+    #endif
   };
   int nbformats = sizeof(formats) / sizeof(formats[0]);
   static char *pat = 0;
@@ -479,13 +479,15 @@ static void file_export_cb(Fl_Widget *w, void *data)
   }
 
  test:
-  if(fileChooser(FILE_CHOOSER_CREATE, "Export", pat)) {
+  if(fileChooser(FILE_CHOOSER_CREATE, "Export", pat)) 
+  { 
+    // Msg::StatusBar(true, "文件名 '%s'", GModel::current()->getFileName().c_str());
     std::string name = fileChooserGetName(1);
     bool confirmOverwrite = CTX::instance()->confirmOverwrite;
-#if defined(__APPLE__)
+    #if defined(__APPLE__)
     // handled directly by the native macOS file chooser
     if(CTX::instance()->nativeFileChooser) confirmOverwrite = false;
-#endif
+    #endif
     if(confirmOverwrite) {
       if(!StatFile(name))
         if(!fl_choice("File '%s' already exists.\n\nDo you want to replace it?",
@@ -494,6 +496,7 @@ static void file_export_cb(Fl_Widget *w, void *data)
     }
     int i = fileChooserGetFilter();
     if(i >= 0 && i < nbformats){
+      // Msg::StatusBar(true, "文件名 '%s'", name.c_str());
       if(!formats[i].func(name.c_str())) goto test;
     }
     else{ // handle any additional automatic fltk filter

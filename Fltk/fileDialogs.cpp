@@ -1596,7 +1596,7 @@ int stlFileDialog(const char *name)
         opt_mesh_save_all(0, GMSH_SET | GMSH_GUI, dialog->b->value() ? 1 : 0);
         opt_mesh_stl_one_solid_per_surface(0, GMSH_SET | GMSH_GUI,
                                            dialog->c[1]->value());
-        CreateOutputFile(name, FORMAT_STL);
+        CreateOutputFile(GModel::current()->getFileName()+".stl", FORMAT_STL);
         dialog->window->hide();
         return 1;
       }
