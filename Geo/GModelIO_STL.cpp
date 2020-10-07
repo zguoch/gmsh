@@ -255,7 +255,6 @@ static void writeSTLfaces(FILE *fp, std::vector<GFace*> &faces, bool binary,
     fwrite(header, sizeof(char), 80, fp);
     fwrite(&nfacets, sizeof(unsigned int), 1, fp);
   }
-
   for(std::vector<GFace*>::iterator it = faces.begin(); it != faces.end(); ++it) {
     if(useGeoSTL && (*it)->stl_vertices_uv.size()) {
       for(std::size_t i = 0; i < (*it)->stl_triangles.size(); i += 3) {
@@ -271,13 +270,13 @@ static void writeSTLfaces(FILE *fp, std::vector<GFace*> &faces, bool binary,
         double n[3];
         normal3points(x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2], n);
         if(!binary) {
-          fprintf(fp, "facet normal %g %g %g\n", n[0], n[1], n[2]);
-          fprintf(fp, "  outer loop\n");
+          fprintf(fp, "\tfacet normal %g %g %g\n", n[0], n[1], n[2]);
+          fprintf(fp, "  \touter loop\n");
           for(int j = 0; j < 3; j++)
-            fprintf(fp, "    vertex %g %g %g\n", x[j] * scalingFactor,
+            fprintf(fp, "    \tvertex %g %g %g\n", x[j] * scalingFactor,
                     y[j] * scalingFactor, z[j] * scalingFactor);
-          fprintf(fp, "  endloop\n");
-          fprintf(fp, "endfacet\n");
+          fprintf(fp, "  \tendloop\n");
+          fprintf(fp, "\tendfacet\n");
         }
         else {
           char data[50];
@@ -326,6 +325,13 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
       std::map<int, std::vector<GEntity *> >::const_iterator it;
       // 2. 处理Physical Volume
       const int dimVolume = 3;
+      // open file, save all physical volumes into a single stl file
+      std::string fnameRegion=path+baseName+"_Volume"+extName;
+      FILE *fp_volume = Fopen(fnameRegion.c_str(), binary ? "wb" : "w");
+      if(!fp_volume) {
+        Msg::Error("Unable to open file '%s'", fnameRegion.c_str());
+        return 0;
+      }
       for(it=physicals[dimVolume].begin();it!=physicals[dimVolume].end();++it)
       {
         std::string nameRegion = getPhysicalName(dimVolume, it->first);       //获取某个physical Volume 的name
@@ -341,20 +347,18 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
           }
           Msg::Info("Physical Volume: %s , the %dth, faces %d",nameRegion.c_str(),i,faces_region.size());
         }
-        // 将每个physical volume都写入一个stl文件
-          std::string fnameRegion=path+baseName+"_"+nameRegion+extName;
-          FILE *fp_region = Fopen(fnameRegion.c_str(), binary ? "wb" : "w");
-          if(!fp) {
-            Msg::Error("Unable to open file '%s'", fnameRegion.c_str());
-            return 0;
-          }
-          
-          writeSTLfaces(fp_region, faces, binary, scalingFactor, nameRegion);
+          writeSTLfaces(fp_volume, faces, binary, scalingFactor, nameRegion);
           Msg::Info("Volume(%s) has %d faces, done writing %s",nameRegion.c_str(),faces.size(),fnameRegion.c_str());
-          fclose(fp_region);
       }
+      fclose(fp_volume);
       // 3. 处理Physical Surfaces
       const int dimSurface = 2;
+      std::string fnameSurface=path+baseName+"_Surface"+extName;
+      FILE *fp_surface = Fopen(fnameSurface.c_str(), binary ? "wb" : "w");
+      if(!fp_surface) {
+        Msg::Error("Unable to open file '%s'", fnameSurface.c_str());
+        return 0;
+      }
       for(it=physicals[dimSurface].begin();it!=physicals[dimSurface].end();++it)
       {
         std::string nameSurface = getPhysicalName(dimSurface, it->first);
@@ -364,17 +368,10 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
         {
           faces.push_back(getFaceByTag(tags[i]));
         }
-        // Msg::Info("Physical Surface: %s , faces %d",nameSurface.c_str(),i,faces.size());
-          std::string fnameSurface=path+baseName+"_"+nameSurface+extName;
-          FILE *fp_surface = Fopen(fnameSurface.c_str(), binary ? "wb" : "w");
-          if(!fp) {
-            Msg::Error("Unable to open file '%s'", fnameSurface.c_str());
-            return 0;
-          }
           writeSTLfaces(fp_surface, faces, binary, scalingFactor, nameSurface);
           Msg::Info("Surface(%s) has %d face(s), done writing %s",nameSurface.c_str(),faces.size(),fnameSurface.c_str());
-          fclose(fp_surface);
       }
+      fclose(fp_surface);
   }
   
   if(noPhysicalGroups()) saveAll = true;

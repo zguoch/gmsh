@@ -1593,24 +1593,24 @@ void MElement::writeSTL(FILE *fp, bool binary, double scalingFactor)
   int qid[3] = {0, 2, 3};
   SVector3 n = getFace(0).normal();
   if(!binary) {
-    fprintf(fp, "facet normal %g %g %g\n", n[0], n[1], n[2]);
-    fprintf(fp, "  outer loop\n");
+    fprintf(fp, "\tfacet normal %g %g %g\n", n[0], n[1], n[2]);
+    fprintf(fp, "  \touter loop\n");
     for(int j = 0; j < 3; j++)
-      fprintf(fp, "    vertex %g %g %g\n", getVertex(j)->x() * scalingFactor,
+      fprintf(fp, "    \tvertex %g %g %g\n", getVertex(j)->x() * scalingFactor,
               getVertex(j)->y() * scalingFactor,
               getVertex(j)->z() * scalingFactor);
-    fprintf(fp, "  endloop\n");
-    fprintf(fp, "endfacet\n");
+    fprintf(fp, "  \tendloop\n");
+    fprintf(fp, "\tendfacet\n");
     if(getNumVertices() == 4) {
-      fprintf(fp, "facet normal %g %g %g\n", n[0], n[1], n[2]);
-      fprintf(fp, "  outer loop\n");
+      fprintf(fp, "\tfacet normal %g %g %g\n", n[0], n[1], n[2]);
+      fprintf(fp, "  \touter loop\n");
       for(int j = 0; j < 3; j++)
-        fprintf(fp, "    vertex %g %g %g\n",
+        fprintf(fp, "    \tvertex %g %g %g\n",
                 getVertex(qid[j])->x() * scalingFactor,
                 getVertex(qid[j])->y() * scalingFactor,
                 getVertex(qid[j])->z() * scalingFactor);
-      fprintf(fp, "  endloop\n");
-      fprintf(fp, "endfacet\n");
+      fprintf(fp, "  \tendloop\n");
+      fprintf(fp, "\tendfacet\n");
     }
   }
   else {
