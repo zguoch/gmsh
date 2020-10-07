@@ -367,6 +367,7 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
       const std::string path = SplitFileName(name)[0];
       const std::string baseName = SplitFileName(name)[1];
       const std::string extName = SplitFileName(name)[2];  // with dot, e.g. .stl
+      std::vector<std::string> surfaceName, volumeName; 
       // 1. 获取所有的Physical Groups
       std::map<int, std::vector<GEntity *> > physicals[4]; //0，1，2，3分别表示点，线，面，体
       getPhysicalGroups(physicals);
@@ -407,6 +408,8 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
           writeSTLfaces(fp_region, faces, binary, scalingFactor, nameRegion);
           Msg::Info("Volume(%s) has %d faces, done writing %s",nameRegion.c_str(),faces.size(),fnameRegion.c_str());
           fclose(fp_region);
+          // volume name
+          volumeName.push_back(nameRegion);
       }
       fclose(fp_volume);
       // 3. 处理Physical Surfaces
@@ -436,8 +439,62 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
           writeSTLfaces(fp_surface, faces, binary, scalingFactor, nameSurface);
           Msg::Info("Surface(%s) has %d face(s), done writing %s",nameSurface.c_str(),faces.size(),fnameSurface.c_str());
           // fclose(fp_surface);
+          // surface name
+          surfaceName.push_back(nameSurface);
       }
       fclose(fp_surface);
+
+      // write snappyHexMesh sub-dicts 
+      std::string fnameSnappyHexMeshDict=path+baseName+".snappyHexMeshDict";
+      FILE *fp_SnappyHexMeshDict = Fopen(fnameSnappyHexMeshDict.c_str(), "w");
+      if(!fp_SnappyHexMeshDict) {
+        Msg::Error("Unable to open file '%s'", fnameSnappyHexMeshDict.c_str());
+        return 0;
+      }
+      // 1. geometry
+      fprintf(fp_SnappyHexMeshDict,"geometry\n{\n");
+      fprintf(fp_SnappyHexMeshDict,"\t%s_Surface.stl\n\t{\n\t\ttype triSurfaceMesh;\n\t\tregions\n\t\t{\n",baseName.c_str());
+      for(int i=0;i<surfaceName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t\t\t%s {name %s;}\n",surfaceName[i].c_str(), surfaceName[i].c_str());
+      }
+      fprintf(fp_SnappyHexMeshDict,"\t\t}\n\t}\n");
+      for(int i=0;i<volumeName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t%s_%s.stl {type triSurfaceMesh; name %s;}\n", 
+                baseName.c_str(), volumeName[i].c_str(), volumeName[i].c_str());
+      }
+      fprintf(fp_SnappyHexMeshDict,"};\n\n");
+      // 2. features
+      fprintf(fp_SnappyHexMeshDict,"features\n(\n\t{file \"%s_Surface.eMesh\"; level 1;}\n", baseName.c_str());
+      for(int i=0;i<volumeName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t{file \"%s_%s.eMesh\"; level 1;}\n",baseName.c_str(),volumeName[i].c_str());
+      }
+      fprintf(fp_SnappyHexMeshDict,");\n");
+      // 3. refinementSurfaces
+      fprintf(fp_SnappyHexMeshDict,"refinementSurfaces\n{\n\t%s_Surface.stl\n\t{\n\t\tlevel (0,0);\n\t\tregions\n\t\t{\n",baseName.c_str());
+      for(int i=0;i<surfaceName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t\t\t%s {level (1 1); patchInfo { type patch; }}\n",surfaceName[i].c_str());
+      }
+      fprintf(fp_SnappyHexMeshDict,"\t\t}\n\t}\n");
+      for(int i=0;i<volumeName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t%s\n\t{\n\t\tlevel (1 1);\n",volumeName[i].c_str());
+        fprintf(fp_SnappyHexMeshDict,"\t\tfaceZone %s;\n\t\tcellZone %s;\n\t\tcellZoneInside inside;\n\t\tboundary    internal;\n\t}\n",
+                volumeName[i].c_str(), volumeName[i].c_str());
+      }
+      // 4. refinementRegions
+      fprintf(fp_SnappyHexMeshDict,"refinementRegions\n{\n");
+      for(int i=0;i<volumeName.size();i++)
+      {
+        fprintf(fp_SnappyHexMeshDict,"\t%s {levels ((0 3)); mode inside;}\n",volumeName[i].c_str());
+      }
+      fprintf(fp_SnappyHexMeshDict,"}\n");
+      // close file
+      fclose(fp_SnappyHexMeshDict);
+      Msg::Info("Snippet of snappyHexMeshDict has been saved: %s",fnameSnappyHexMeshDict.c_str());
   }
   
   return 1;
