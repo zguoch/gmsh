@@ -473,7 +473,7 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
       }
       fprintf(fp_SnappyHexMeshDict,");\n");
       // 3. refinementSurfaces
-      fprintf(fp_SnappyHexMeshDict,"refinementSurfaces\n{\n\t%s_Surface.stl\n\t{\n\t\tlevel (0,0);\n\t\tregions\n\t\t{\n",baseName.c_str());
+      fprintf(fp_SnappyHexMeshDict,"refinementSurfaces\n{\n\t%s_Surface.stl\n\t{\n\t\tlevel (0 0);\n\t\tregions\n\t\t{\n",baseName.c_str());
       for(int i=0;i<surfaceName.size();i++)
       {
         fprintf(fp_SnappyHexMeshDict,"\t\t\t%s {level (1 1); patchInfo { type patch; }}\n",surfaceName[i].c_str());
