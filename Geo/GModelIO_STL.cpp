@@ -430,15 +430,16 @@ int GModel::writeSTL(const std::string &name, bool binary, bool saveAll,
           faces.push_back(getFaceByTag(tags[i]));
         }
         // Msg::Info("Physical Surface: %s , faces %d",nameSurface.c_str(),i,faces.size());
-          // std::string fnameSurface=path+baseName+"_"+nameSurface+extName;
-          // FILE *fp_surface = Fopen(fnameSurface.c_str(), binary ? "wb" : "w");
-          // if(!fp) {
-          //   Msg::Error("Unable to open file '%s'", fnameSurface.c_str());
-          //   return 0;
-          // }
+          std::string fnameSurface0=path+baseName+"_"+nameSurface+extName;
+          FILE *fp_surface0 = Fopen(fnameSurface0.c_str(), binary ? "wb" : "w");
+          if(!fp_surface0) {
+            Msg::Error("Unable to open file '%s'", fnameSurface0.c_str());
+            return 0;
+          }
+          writeSTLfaces(fp_surface0, faces, binary, scalingFactor, nameSurface);
           writeSTLfaces(fp_surface, faces, binary, scalingFactor, nameSurface);
           Msg::Info("Surface(%s) has %d face(s), done writing %s",nameSurface.c_str(),faces.size(),fnameSurface.c_str());
-          // fclose(fp_surface);
+          fclose(fp_surface0);
           // surface name
           surfaceName.push_back(nameSurface);
       }
