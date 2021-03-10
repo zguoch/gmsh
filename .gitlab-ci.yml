@@ -1,10 +1,7 @@
 linux64_ci:
-  image: onelab/ubuntu20.04
+  image: laurenss/texlive-full
+  stage: build
   script:
     - mkdir build
-    - cd build
-    - export CXXFLAGS=-Werror
-    - cmake ..
-    - make -j 8
   only:
     - master
