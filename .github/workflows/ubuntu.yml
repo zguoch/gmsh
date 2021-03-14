@@ -1,0 +1,118 @@
+name: Ubuntu
+on: 
+  push:
+    branches: main
+    tags:
+      - 'V*'
+env:
+  HOME: /home/runner/work/saltwatereos/saltwatereos
+jobs:
+  buildApp:
+    name: library
+    runs-on: ubuntu-latest
+    steps:
+      # checkout source code
+      - uses: actions/checkout@v2
+      
+      # install QT5
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2.13.0
+        with:
+          version: '5.15.2'
+          host: 'linux'
+          target: 'desktop'
+          dir: '${{ github.workspace }}/QT/'
+      
+      # install some useful packages 
+      - name: install dependence
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tcl-dev
+          sudo snap install cqtdeployer
+      # install dependencies, e.g. VTK, swig
+      - name: install dependencies
+        run: |
+          git clone https://github.com/zguoch/dependencies_swEOS.git
+          cd dependencies_swEOS/ubuntu
+          unzip -qq VTK8.2.zip
+
+      # set python env
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      
+      # get short SHA of commit 
+      - name: Add SHORT_SHA env property with commit short sha
+        run: |
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: info 
+        run: |
+          cmake --version
+          g++ --version
+          echo ${{ github.ref }}
+          echo "commit id short" ${SHORT_SHA}
+          echo "github tag: " ${GIT_TAG}
+      
+      # cmake library
+      - name: build swEOS library
+        run: |
+          mkdir Library/build
+          cd Library/build
+          cmake -DBuild_API_tcl=OFF ..
+          make install
+          cd ../..
+      
+      # build cmd app
+      - name: build swEOS cmd app
+        run: |
+          mkdir -p commandline/build
+          cd commandline/build
+          cmake ..
+          make 
+          chmod 755 swEOS
+          
+      # build desktop app
+      - name: build desktop app
+        run: |
+          cd ${{env.HOME}}
+          mkdir desktop/build
+          cd desktop/build
+          cmake -DVTK_DIR=${{env.HOME}}/dependencies_swEOS/ubuntu/VTK8.2/lib/cmake/vtk-8.2 ..
+          make 
+          cqtdeployer -bin swEOS -qmake ${Qt5_DIR}/bin/qmake -targetDir  Release
+          cp ${{env.HOME}}/dependencies_swEOS/ubuntu/VTK8.2/lib/*.so.1 Release/lib
+          chmod 755 Release/swEOS.sh
+          chmod 755 Release/bin/swEOS
+      # package
+      - name: package
+        run: |
+          cd ${{env.HOME}}
+          mkdir swEOS_ubuntu
+          cp -rf Library/lib swEOS_ubuntu/
+          cp -rf Library/API swEOS_ubuntu/
+          cp -rf Library/include swEOS_ubuntu/
+          cp commandline/build/swEOS swEOS_ubuntu/swEOS_cmd
+          cp -rf desktop/build/Release swEOS_ubuntu/
+          zip -r swEOS_ubuntu.zip swEOS_ubuntu
+      # # debug workflow
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+
+      # upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: swEOS_ubuntu_${{env.SHORT_SHA}}.zip
+          path: swEOS_ubuntu.zip
+
+      # tag 上传Release
+      - name: uploadRelease
+        if: startsWith(github.event.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: swEOS_ubuntu.zip
+          asset_name: swEOS_ubuntu_${{env.GIT_TAG}}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
