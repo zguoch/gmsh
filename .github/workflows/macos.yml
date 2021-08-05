@@ -24,6 +24,14 @@ jobs:
           brew install hdf5
           brew install qt5
           export LIBRARY_PATH=/usr/local/lib
+      # debug workflow through ssh
+      - name: install oh my zsh
+        run: sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+      - uses: actions/checkout@v2
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+      
+      # build app
       - name: build app
         run: |
           mkdir -p gmsh/build
@@ -31,12 +39,6 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make 
           ${QT_DIR}/bin/macdeployqt gmsh.app -dmg
-      # # debug workflow through ssh
-      # - name: install oh my zsh
-      #   run: sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-      # - uses: actions/checkout@v2
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
 
       - uses: actions/upload-artifact@v2
         with:
