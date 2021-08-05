@@ -34,14 +34,15 @@ jobs:
       # build app
       - name: build app
         run: |
-          mkdir -p gmsh/build
-          cd gmsh/build
+          mkdir -p build
+          cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
+          export LIBRARY_PATH=/usr/local/lib
           make 
           ${QT_DIR}/bin/macdeployqt gmsh.app -dmg
 
       - uses: actions/upload-artifact@v2
         with:
           name: gmsh.dmg
-          path: gmsh/build/gmsh.dmg
+          path: build/gmsh.dmg
 
