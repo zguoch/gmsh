@@ -17,14 +17,11 @@ jobs:
     steps:
       # checkout source code
       - uses: actions/checkout@v2
-      # - name: install dependence
-      #   run: |
-      #     brew install tcl-tk
-      #     brew install swig
-      #     brew install libomp
-      #     brew install vtk@8.2
-      #     export LDFLAGS="-L/usr/local/opt/vtk@8.2/lib"
-      #     export CPPFLAGS="-I/usr/local/opt/vtk@8.2/include"
+      - name: install dependence
+        run: |
+          brew install opencascade
+          brew install fltk
+          brew install hdf5
       # - name: Set up Python 3.9
       #   uses: actions/setup-python@v2
       #   with:
